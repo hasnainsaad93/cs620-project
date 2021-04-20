@@ -12,9 +12,9 @@ def Weather_Data_Extraction(item):
     try: 
         chrome_options = webdriver.ChromeOptions()
         chrome_options.add_argument('--headless')
-        driver = webdriver.Chrome(options=chrome_options)
+        driver = webdriver.Chrome(options=chrome_options, executable_path='C:/chromedriver/chromedriver.exe')
         driver.get("https://www.wunderground.com/history/daily/KABI/date/" + item)
-        time.sleep(5)
+        time.sleep(10)
         squadPage = driver.page_source
         soup = BeautifulSoup(squadPage, 'html.parser')
         table_data = soup.find('table', class_='ng-star-inserted')
@@ -107,21 +107,24 @@ def Weather_Data_Extraction(item):
         }
 
         list_weather_data.append(weather_object)
-    except:
+    except Exception as e:
         print('Exception raised')
+        print(e)
         list_except_dates.append(item)
 
     
 
-date_list = pd.date_range('2000-01-01', '2000-12-31', freq="D")
+# date_list = pd.date_range('2001-01-01', '2009-12-31', freq="D")
+date_list_except = list((pd.read_csv('except_dates_except.csv')).iloc[:,1])
+
 
 check_index = 0
 list_of_threads = []
 
-for date_item in date_list:
-    item = str(date_item.year) + '-' + str(date_item.month) + '-' + str(date_item.day)
+for date_item in date_list_except:
+    # item = str(date_item.year) + '-' + str(date_item.month) + '-' + str(date_item.day)
     check_index = check_index + 1
-    list_of_threads.append(Thread(target=Weather_Data_Extraction, args=(item,)))
+    list_of_threads.append(Thread(target=Weather_Data_Extraction, args=(date_item,)))
     
     if check_index == 10:
         for thread_item in list_of_threads:
@@ -133,8 +136,8 @@ for date_item in date_list:
         check_index = 0
 
 weather_data = DataFrame(list_weather_data)
-weather_data.to_csv('weather_data_2000_2000.csv')
+weather_data.to_csv('weather_data_except1.csv')
 except_dates_data = DataFrame(list_except_dates)
-except_dates_data.to_csv('except_dates_2000_2000.csv')
+except_dates_data.to_csv('except_dates_except1.csv')
 
 print('Weather Data Completed!')
